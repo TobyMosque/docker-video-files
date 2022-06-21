@@ -1,0 +1,19 @@
+version: '3.4'
+
+services:
+  dregistry:
+    restart: always
+    container_name: dregistry
+    image: registry:latest
+    ports:
+      - "XX2:443"
+      - "XX1:5000"
+    environment:
+      - "REGISTRY_AUTH=htpasswd"
+      - "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm"
+      - "REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd"
+      - "TZ=America/Sao_Paulo"
+    volumes:
+      - ./.docker/auth:/auth
+      - ./dregistry/data:/var/lib/registry
+    

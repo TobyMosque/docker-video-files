@@ -1,0 +1,47 @@
+version: '3.4'
+
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:latest
+    restart: always
+    environment:
+      - "TZ=America/Sao_Paulo"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    logging:
+      driver: none
+    command:
+      - "--api=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.traefik.address=:8080"
+      - "--certificatesResolvers.le.acme.email=me@tobiasmesquita.dev"
+      - "--certificatesResolvers.le.acme.storage=acme.json"
+      - "--certificatesResolvers.le.acme.tlsChallenge=true"
+      - "--certificatesResolvers.le.acme.httpChallenge=true"
+      - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=web"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/acme.json:/acme.json
+     labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+      - "traefik.http.routers.traefik-secure.entrypoints=websecure"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=le"
+      - "traefik.http.routers.traefik-secure.middlewares=traefik-ba"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.tobiasmesquita.dev`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.middlewares=traefik-rs"
+      - "traefik.http.middlewares.traefik-ba.basicauth.users=admin:$$apr1$$2.6Bjnvn$$/He.z1RnKPt.JDKRAtLpE/"
+      - "traefik.http.middlewares.traefik-rs.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.traefik-rs.redirectscheme.permanent=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/acme.json:/acme.json
+    

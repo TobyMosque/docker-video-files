@@ -1,0 +1,6 @@
+sudo systemctl enable docker
+
+sudo apt-get install apache2-utils
+echo $(htpasswd -nb ${user} ${password}) | sed -e s/\\$/\\$\\$/g
+
+echo $(htpasswd -nb su Grueling$Finished$Imaginary$Vintage$Speak$Elephant$Shining$Afterglow$Magma) | sed -e s/\\$/\\$\\$/g

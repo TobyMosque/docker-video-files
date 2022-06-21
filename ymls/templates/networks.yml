@@ -1,0 +1,20 @@
+version: '3.4'
+
+services:
+  any_service:
+    networks:
+      tm.network:
+      tm.internal:
+        ipv4_address: "172.18.24.xxx"
+        aliases:
+          - any_service
+
+networks:
+  tm.internal:
+    internal: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.24.0/24
+  tm.network:

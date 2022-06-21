@@ -1,0 +1,18 @@
+version: '3.4'
+
+services:
+   container_name: glances_tm
+    image: nicolargo/glances:latest
+    restart: always
+    pid: host
+    environment:
+      - "TZ=America/Sao_Paulo"
+      - "GLANCES_OPT=-w -t 10"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.config/glances/glances.pwd:/root/.config/glances/glances.pwd
+      - ./.config/glances/glances.conf:/glances/conf/glances.conf
+    ports:
+      - "XX1:61208"
+      - "XX2:61209"
+    

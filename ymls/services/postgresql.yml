@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  postgresql:
+    container_name: postgresql
+    restart: always
+    image: postgres:13
+    ports:
+      - "XX1:5432"
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 
+      POSTGRES_DB: postgres

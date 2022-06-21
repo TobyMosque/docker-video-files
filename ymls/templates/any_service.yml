@@ -1,0 +1,29 @@
+version: '3.4'
+
+services:
+  any_service:
+    networks:
+      tm.network:
+      tm.internal:
+        ipv4_address: "172.18.24.xxx"
+        aliases:
+          - any_service
+    ports:
+      - "YY1:XX1"
+      - "YY2:XX2"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.any_service.loadbalancer.server.port=XX1"
+      - "traefik.http.routers.any_service-secure.rule=Host(`any_service.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.any_service-secure.entrypoints=websecure"
+      - "traefik.http.routers.any_service-secure.tls=true"
+      - "traefik.http.routers.any_service-secure.tls.certresolver=le"
+      - "traefik.http.routers.any_service-secure.service=any_service"
+      - "traefik.http.routers.any_service-secure.middlewares=any_service-ba"
+      - "traefik.http.routers.any_service.rule=Host(`any_service.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.any_service.entrypoints=web"
+      - "traefik.http.routers.any_service.middlewares=any_service-rs"
+      - "traefik.http.middlewares.any_service-ba.basicauth.users=su:$$apr1$$mdqj7f3o$$N/MzscSuQPlXQ.T0umPHX0"
+      - "traefik.http.middlewares.any_service-rs.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.any_service-rs.redirectscheme.permanent=true"
+    

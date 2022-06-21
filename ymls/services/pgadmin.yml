@@ -1,0 +1,16 @@
+version: '3.4'
+
+services:
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "me@tobiasmesquita.dev"
+      PGADMIN_DEFAULT_PASSWORD: ""
+    ports:
+      - "XX1:80"
+      - "XX2:443"
+    volumes:
+      - ./.config/pgadmin:/var/lib/pgadmin
+      - ./.config/pgadmin4:/var/lib/pgadmin4
