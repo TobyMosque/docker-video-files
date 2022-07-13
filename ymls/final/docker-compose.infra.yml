@@ -1,0 +1,189 @@
+version: '3.4'
+
+services:
+  postgresql:
+    container_name: postgresql
+    restart: always
+    image: postgres:13
+    ports:
+      - "25032:5432"
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: su
+      POSTGRES_PASSWORD: Snowiness#Parcel#Sitter#Excursion#Unfasten#Powwow#Staring#Overarch#Sadden
+      POSTGRES_DB: postgres
+    networks:
+      tm.network:
+      tm.internal:
+        ipv4_address: "172.18.24.250"
+        aliases:
+          - postgresql
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "me@tobiasmesquita.dev"
+      PGADMIN_DEFAULT_PASSWORD: "Attendant#Petted#Depth#Skeptic#Legume#Overcoat#Engraved#Rust#Safehouse"
+    ports:
+      - "25180:80"
+      - "25143:443"
+    volumes:
+      - ./.config/pgadmin:/var/lib/pgadmin
+      - ./.config/pgadmin4:/var/lib/pgadmin4
+    networks:
+      tm.network:
+      tm.internal:
+        ipv4_address: "172.18.24.251"
+        aliases:
+          - pgadmin
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+      - "traefik.http.routers.pgadmin-secure.rule=Host(`pgadmin.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.pgadmin-secure.entrypoints=websecure"
+      - "traefik.http.routers.pgadmin-secure.tls=true"
+      - "traefik.http.routers.pgadmin-secure.tls.certresolver=le"
+      - "traefik.http.routers.pgadmin-secure.service=pgadmin"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.pgadmin.entrypoints=web"
+      - "traefik.http.routers.pgadmin.middlewares=pgadmin-rs"
+      - "traefik.http.middlewares.pgadmin-rs.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.pgadmin-rs.redirectscheme.permanent=true"
+
+  dregistry:
+    restart: always
+    container_name: dregistry
+    image: registry:latest
+    ports:
+      - "25243:443"
+      - "25200:5000"
+    environment:
+      - "REGISTRY_AUTH=htpasswd"
+      - "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm"
+      - "REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd"
+      - "TZ=America/Sao_Paulo"
+    volumes:
+      - ./.docker/auth:/auth
+      - ./dregistry/data:/var/lib/registry
+    networks:
+      tm.network:
+      tm.internal:
+        ipv4_address: "172.18.24.252"
+        aliases:
+          - dregistry
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.dregistry.loadbalancer.server.port=5000"
+      - "traefik.http.routers.dregistry-secure.rule=Host(`docker.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.dregistry-secure.entrypoints=websecure"
+      - "traefik.http.routers.dregistry-secure.tls=true"
+      - "traefik.http.routers.dregistry-secure.tls.certresolver=le"
+      - "traefik.http.routers.dregistry-secure.service=dregistry"
+      - "traefik.http.routers.dregistry.rule=Host(`docker.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.dregistry.entrypoints=web"
+      - "traefik.http.routers.dregistry.middlewares=dregistry-rs"
+      - "traefik.http.middlewares.dregistry-rs.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.dregistry-rs.redirectscheme.permanent=true"
+
+  glances:
+    container_name: glances
+    image: nicolargo/glances:latest
+    restart: always
+    pid: host
+    environment:
+      - "TZ=America/Sao_Paulo"
+      - "GLANCES_OPT=-w -t 10"
+    logging:
+      driver: local
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.config/glances/glances.pwd:/root/.config/glances/glances.pwd
+      - ./.config/glances/glances.conf:/glances/conf/glances.conf
+    ports:
+      - "25308:61208"
+      - "25309:61209"
+    networks:
+      tm.network:
+      tm.internal:
+        ipv4_address: "172.18.24.253"
+        aliases:
+          - glances
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.glances.loadbalancer.server.port=61208"
+      - "traefik.http.routers.glances-secure.rule=Host(`glances.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.glances-secure.entrypoints=websecure"
+      - "traefik.http.routers.glances-secure.tls=true"
+      - "traefik.http.routers.glances-secure.tls.certresolver=le"
+      - "traefik.http.routers.glances-secure.service=glances"
+      - "traefik.http.routers.glances-secure.middlewares=glances-ba"
+      - "traefik.http.routers.glances.rule=Host(`glances.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.glances.entrypoints=web"
+      - "traefik.http.routers.glances.middlewares=glances-rs"
+      - "traefik.http.middlewares.glances-ba.basicauth.users=su:$$apr1$$oFcBObIJ$$OkSHXQ7xYbBAfjJzdUFM30"
+      - "traefik.http.middlewares.glances-rs.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.glances-rs.redirectscheme.permanent=true"
+
+  traefik:
+    container_name: traefik
+    image: traefik:latest
+    restart: always
+    environment:
+      - "TZ=America/Sao_Paulo"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    logging:
+      driver: none
+    command:
+      - "--api=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.traefik.address=:8080"
+      - "--certificatesResolvers.le.acme.email=me@tobiasmesquita.dev"
+      - "--certificatesResolvers.le.acme.storage=acme.json"
+      - "--certificatesResolvers.le.acme.tlsChallenge=true"
+      - "--certificatesResolvers.le.acme.httpChallenge=true"
+      - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=web"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/acme.json:/acme.json
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.traefik-secure.entrypoints=websecure"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=le"
+      - "traefik.http.routers.traefik-secure.middlewares=traefik-ba"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.middlewares=traefik-rs"
+      - "traefik.http.middlewares.traefik-ba.basicauth.users=su:$$apr1$$9UH1eRwU$$2./dy1a4QoUzjfHnFL/oR1"
+      - "traefik.http.middlewares.traefik-rs.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.traefik-rs.redirectscheme.permanent=true"
+    networks:
+      tm.network:
+      tm.internal:
+        ipv4_address: "172.18.24.254"
+        aliases:
+          - traefik
+
+volumes:
+  pgadmin:
+
+networks:
+  tm.internal:
+    internal: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.24.0/24
+  tm.network:

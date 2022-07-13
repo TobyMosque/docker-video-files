@@ -1,0 +1,33 @@
+version: '3.4'
+
+services:
+  demo_app:
+    container_name: demo.app
+    image: docker.test.tobiasmesquita.dev/demo-app-ssr:latest
+    restart: always
+    networks:
+      tm.network:
+      tm.internal:
+        ipv4_address: "172.18.24.10"
+        aliases:
+          - demoapp
+    volumes:
+      - demo-app-ssr:/app/uploads
+    ports:
+      - "10000:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.demo_app.loadbalancer.server.port=3000"
+      - "traefik.http.routers.demo_app-secure.rule=Host(`demoapp.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.demo_app-secure.entrypoints=websecure"
+      - "traefik.http.routers.demo_app-secure.tls=true"
+      - "traefik.http.routers.demo_app-secure.tls.certresolver=le"
+      - "traefik.http.routers.demo_app-secure.service=demo_app"
+      - "traefik.http.routers.demo_app.rule=Host(`demoapp.test.tobiasmesquita.dev`)"
+      - "traefik.http.routers.demo_app.entrypoints=web"
+      - "traefik.http.routers.demo_app.middlewares=demo_app-rs"
+      - "traefik.http.middlewares.demo_app-rs.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.demo_app-rs.redirectscheme.permanent=true"
+
+volumes:
+  demo-app-ssr:
